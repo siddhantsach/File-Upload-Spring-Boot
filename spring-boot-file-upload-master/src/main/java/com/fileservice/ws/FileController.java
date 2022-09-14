@@ -1,6 +1,9 @@
 package com.fileservice.ws;
 
+import com.fasterxml.jackson.databind.util.JSONPObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.configurationprocessor.json.JSONException;
+import org.springframework.boot.configurationprocessor.json.JSONObject;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -20,15 +23,21 @@ public class FileController {
 	private FileStorageService fileStorageService;
 	
 	@PostMapping
-	public ResponseEntity<FileResponse> uploadFile(@RequestParam("qqfile") MultipartFile file){
-		String fileName = fileStorageService.storeFile(file);
+//	public ResponseEntity<FileResponse> uploadFile(@RequestParam("qqfile") MultipartFile file){
+	public ResponseEntity uploadFile(@RequestParam("qqfile") MultipartFile file){
+
+			String fileName = fileStorageService.storeFile(file);
 		String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
 				.path("/files/")
 				.path(fileName)
 				.toUriString();
 		
 		FileResponse fileResponse = new FileResponse(fileName, fileDownloadUri, file.getContentType(), file.getSize());
-		return new ResponseEntity(fileResponse, HttpStatus.OK);
+		try {
+			return new ResponseEntity(new JSONObject().put("success", "true").toString(),HttpStatus.OK);
+		} catch (JSONException e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
 	@GetMapping("/{fileName:.+}")
